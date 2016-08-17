@@ -4016,8 +4016,10 @@ cache(function(data, match, sendBadge, request) {
   var groupId = match[1]; // eg, `com.google.inject`
   var artifactId = match[2]; // eg, `guice`
   var format = match[3] || "gif"; // eg, `guice`
-  var query = "g:" + encodeURIComponent(groupId) + "+AND+a:" + encodeURIComponent(artifactId);
-  var apiUrl = 'https://search.maven.org/solrsearch/select?rows=1&q='+query;
+  //var query = "g:" + encodeURIComponent(groupId) + "+AND+a:" + encodeURIComponent(artifactId);
+  //var apiUrl = 'https://search.maven.org/solrsearch/select?rows=1&q='+query;
+  var query = "g=" + encodeURIComponent(groupId) + "&a=" + encodeURIComponent(artifactId);
+  var apiUrl = 'http://repo.avatar.naver.com/service/local/lucene/search?' + query;
   var badgeData = getBadgeData('maven-central', data);
   request(apiUrl, { headers: { 'Accept': 'application/json' } }, function(err, res, buffer) {
     if (err != null) {
@@ -4027,9 +4029,13 @@ cache(function(data, match, sendBadge, request) {
     }
     try {
       var data = JSON.parse(buffer);
-      var version = data.response.docs[0].latestVersion;
+      var version = data.data[0].latestRelease;
+      var snapshotVersion = data.data[0].latestSnapshot;
       badgeData.text[1] = 'v' + version;
-      if (version === '0' || /SNAPSHOT/.test(version)) {
+      if (!version) {
+        badgeData.text[1] = 'v' + snapshotVersion;
+      }
+      if (version === '0' || /SNAPSHOT/.test(version) || !version) {
         badgeData.colorscheme = 'orange';
       } else {
         badgeData.colorscheme = 'blue';
